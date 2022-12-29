@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  emby:
+    image: lscr.io/linuxserver/emby:latest
+    container_name: emby
+    hostname: "emby"
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/emby:/config
+      - /home/clemon/media:/datae
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.emby.loadbalancer.server.port=8096"
+      # http
+      - "traefik.http.routers.emby.entrypoints=web"
+      - "traefik.http.routers.emby.rule=Host(`emby.media.local`)"
+      - "traefik.http.routers.emby.service=emby"
+    ports:
+      - 8096:8096
+  chinesesubfinder:
+    image: allanpk716/chinesesubfinder:v0.45.1
+    container_name: chinesesubfinder
+    restart: unless-stopped
+    volumes:
+      - ./config/chinesesubfinder:/config  # 冒号左边请修改为你想在主机上保存配置、日志等文件的路径
+      - /home/clemon/media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来
+      - ./config/chinesesubfinder/browser:/root/.cache/rod/browser    # 容器重启后无需再次下载 chrome，除非 go-rod 更新
+    environment:
+      - PUID=1000         # uid
+      - PGID=1000         # gid
+      - PERMS=true        # 是否重设/media权限
+      - TZ=Asia/Shanghai  # 时区
+      - UMASK=022         # 权限掩码
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.chinesesubfinder.loadbalancer.server.port=19035"
+      # http
+      - "traefik.http.routers.chinesesubfinder.entrypoints=web"
+      - "traefik.http.routers.chinesesubfinder.rule=Host(`chinesesubfinder.media.local`)"
+      - "traefik.http.routers.chinesesubfinder.service=chinesesubfinder"
+    ports:
+      - 19035  # 从0.20.0版本开始，通过webui来设置
+      - 19037:19037  # webui 的视频列表读取图片用，务必设置不要暴露到外网
+    logging:
+        driver: "json-file"
+        options:
+          max-size: "100m" # 限制docker控制台日志大小，可自行调整
+
+networks:
+  default:
+    name: traefik_bridge
+    external: true
