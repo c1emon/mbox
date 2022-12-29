@@ -4,7 +4,7 @@ services:
   emby:
     image: lscr.io/linuxserver/emby:latest
     container_name: emby
-    hostname: "emby"
+    hostname: emby
     restart: unless-stopped
     environment:
       - PUID=1000
@@ -12,7 +12,7 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       - ./config/emby:/config
-      - /home/clemon/media:/datae
+      - /mnt/media:/data
     labels:
       # auto update image
       # - "com.centurylinklabs.watchtower.enable=true"
