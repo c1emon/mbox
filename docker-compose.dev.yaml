@@ -117,15 +117,39 @@ services:
       # traefik
       - "traefik.enable=true"
       # svc
-      - "traefik.http.services.qbittorrent.loadbalancer.server.port=6800"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
       # http
       - "traefik.http.routers.qbittorrent.entrypoints=web"
       - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.media.local`)"
       - "traefik.http.routers.qbittorrent.service=qbittorrent"
     ports:
-      - 6800
+      - 8080
       - 6881:6881/tcp
       - 6881:6881/udp
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    hostname: flaresolverr
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TEST_URL=http://www.baidu.com
+      - TZ=Asia/Shanghai
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.flaresolverr.loadbalancer.server.port=8191"
+      # http
+      - "traefik.http.routers.flaresolverr.entrypoints=web"
+      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.media.local`)"
+      - "traefik.http.routers.flaresolverr.service=flaresolverr"
+    ports:
+      - 8191
 
 networks:
   default:
