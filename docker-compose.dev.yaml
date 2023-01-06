@@ -150,6 +150,28 @@ services:
       - "traefik.http.routers.flaresolverr.service=flaresolverr"
     ports:
       - 8191
+  xarr_rss:
+    image: xiaoyi510/xarr-rss
+    container_name: xarr_rss
+    hostname: xarr_rss
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/xarr_rss:/app/conf
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.xarr_rss.loadbalancer.server.port=8086"
+      # http
+      - "traefik.http.routers.xarr_rss.entrypoints=web"
+      - "traefik.http.routers.xarr_rss.rule=Host(`xarr_rss.media.local`)"
+      - "traefik.http.routers.xarr_rss.service=xarr_rss"
+    ports:
+      - 8086
 
 networks:
   default:
