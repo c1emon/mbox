@@ -2,7 +2,7 @@ version: '3'
 
 services:
   emby:
-    image: lscr.io/linuxserver/emby:latest
+    image: linuxserver/emby:latest
     container_name: emby
     hostname: emby
     restart: unless-stopped
@@ -25,14 +25,15 @@ services:
       - "traefik.http.routers.emby.rule=Host(`emby.media.local`)"
       - "traefik.http.routers.emby.service=emby"
     ports:
-      - 8096:8096
+      - 8096
   chinesesubfinder:
-    image: allanpk716/chinesesubfinder:v0.45.1
+    image: allanpk716/chinesesubfinder:latest
     container_name: chinesesubfinder
+    hostname: chinesesubfinder
     restart: unless-stopped
     volumes:
       - ./config/chinesesubfinder:/config  # 冒号左边请修改为你想在主机上保存配置、日志等文件的路径
-      - /home/clemon/media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来
+      - /mnt/media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来
       - ./config/chinesesubfinder/browser:/root/.cache/rod/browser    # 容器重启后无需再次下载 chrome，除非 go-rod 更新
     environment:
       - PUID=1000         # uid
@@ -58,6 +59,156 @@ services:
         driver: "json-file"
         options:
           max-size: "100m" # 限制docker控制台日志大小，可自行调整
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    hostname: prowlarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/prowlarr:/config
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+      # http
+      - "traefik.http.routers.prowlarr.entrypoints=web"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.media.local`)"
+      - "traefik.http.routers.prowlarr.service=prowlarr"
+    ports:
+      - 9696
+  ombi:
+    image: linuxserver/ombi:latest
+    container_name: ombi
+    hostname: ombi
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/ombi:/config
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.ombi.loadbalancer.server.port=3579"
+      # http
+      - "traefik.http.routers.ombi.entrypoints=web"
+      - "traefik.http.routers.ombi.rule=Host(`ombi.media.local`)"
+      - "traefik.http.routers.ombi.service=ombi"
+    ports:
+      - 3579
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    hostname: sonarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/sonarr:/config
+      - /mnt/media:/data
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      # http
+      - "traefik.http.routers.sonarr.entrypoints=web"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.media.local`)"
+      - "traefik.http.routers.sonarr.service=sonarr"
+    ports:
+      - 8989
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    hostname: radarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/radarr:/config
+      - /mnt/media:/data
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      # http
+      - "traefik.http.routers.radarr.entrypoints=web"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.media.local`)"
+      - "traefik.http.routers.radarr.service=radarr"
+    ports:
+      - 7878
+  qbittorrent:
+    image: superng6/qbittorrent:latest
+    container_name: qbittorrent
+    hostname: qbittorrent
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config/qbittorrent:/config
+      - /mnt/media:/data
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
+      # http
+      - "traefik.http.routers.qbittorrent.entrypoints=web"
+      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.media.local`)"
+      - "traefik.http.routers.qbittorrent.service=qbittorrent"
+    ports:
+      - 8080
+      - 26881:26881/tcp
+      - 26881:26881/udp
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    hostname: flaresolverr
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TEST_URL=http://www.baidu.com
+      - TZ=Asia/Shanghai
+    labels:
+      # auto update image
+      # - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.flaresolverr.loadbalancer.server.port=8191"
+      # http
+      - "traefik.http.routers.flaresolverr.entrypoints=web"
+      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.media.local`)"
+      - "traefik.http.routers.flaresolverr.service=flaresolverr"
+    ports:
+      - 8191
+
 
 networks:
   default:
